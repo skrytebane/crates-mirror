@@ -12,11 +12,6 @@ from git import Repo
 
 dl = "https://crates.io/api/v1/crates/{name}/{version}/download"
 
-proxies = {
-    "http": "http://localhost:8123",
-    "https": "http://localhost:8123"
-}
-
 max_connection = 10
 chunk_size = 512 * 1024
 
@@ -95,7 +90,7 @@ async def download_crate(name, version, checksum):
     if not os.path.exists(directory):
         os.makedirs(directory)
     crate_path = os.path.join(directory, filename)
-    r = requests.get(dl.format(name=name, version=version), proxies=proxies, timeout=5, stream=True)
+    r = requests.get(dl.format(name=name, version=version), timeout=5, stream=True)
     with open(crate_path, "wb") as fd: # is chunk needed here?
         for chunk in r.iter_content(chunk_size=chunk_size):
             fd.write(chunk)
@@ -126,7 +121,7 @@ def retrieve_crates():
         tasks = [asyncio.ensure_future(retrieve_crate(name, version, checksum)) for name, version, checksum in crates]
         loop.run_until_complete(asyncio.wait(tasks))
         crates = cur.fetchmany(max_connection)
-    
+
 
 def get_crate_info(name, version):
     if len(name) == 1:
